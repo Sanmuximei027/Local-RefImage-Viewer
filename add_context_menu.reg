@@ -1,0 +1,15 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\Directory\shell\OpenWithGalleryServer]
+@="用图库查看(&G)"
+"Icon"="D:\\Node.js\\node.exe"
+
+[HKEY_CLASSES_ROOT\Directory\shell\OpenWithGalleryServer\command]
+@="\"D:\\Node.js\\node.exe\" \"D:\\Developer\\Projects\\gallery_server\\server.js\" \"%1\""
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\OpenWithGalleryServer]
+@="用图库查看(&G)"
+"Icon"="D:\\Node.js\\node.exe"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\OpenWithGalleryServer\command]
+@="\"D:\\Node.js\\node.exe\" \"D:\\Developer\\Projects\\gallery_server\\server.js\" \"%V\""

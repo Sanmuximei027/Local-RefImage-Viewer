@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>我的全能本地图库管理系统</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            background: #f4f6f9;
+            overflow: hidden; /* 防止底层页面滚动 */
+        }
+
+        /* ====== 原有样式保持不变 ====== */
+        .sidebar {
+            width: 300px;
+            background: #ffffff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #eef0f3;
+            z-index: 10;
+        }
+        h3 { margin-top: 0; color: #2c3e50; }
+        .add-folder-box {
+            display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;
+            background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px dashed #ced4da;
+        }
+        .add-folder-box button {
+            background: #4facfe; color: white; border: none; padding: 10px;
+            border-radius: 4px; cursor: pointer; transition: 0.2s; font-weight: bold;
+        }
+        .add-folder-box button:hover { background: #00f2fe; }
+        .add-folder-box button:disabled { background: #ccc; cursor: not-allowed; }
+        .folder-list { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
+        .folder-item {
+            padding: 12px 15px; margin-bottom: 8px; background: #fdfdfd;
+            border: 1px solid #e9ecef; border-radius: 6px; cursor: pointer;
+            word-break: break-all; font-size: 14px; color: #495057; transition: 0.2s;
+        }
+        .folder-item:hover { background: #eef2f5; }
+        .folder-item.active { background: #e6f2ff; border-color: #b3d7ff; color: #0056b3; font-weight: bold; }
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .header { margin-bottom: 20px; }
+        .header h2 { margin: 0; color: #343a40; }
+        .header p { color: #6c757d; font-size: 14px; }
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .img-card { 
+            background: white; padding: 10px; border-radius: 12px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer; /* 增加鼠标手型 */
+        }
+        .img-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .img-card img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; background-color: #eee; }
+        .img-name { margin-top: 10px; font-size: 13px; color: #555; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .empty-state { text-align: center; padding: 50px; color: #adb5bd; }
+        #message { color: red; font-size: 12px; margin-top: 5px; display: none; }
+
+        /* ====== 【全新：沉浸式大图查看器 (Lightbox) 样式】 ====== */
+        .lightbox {
+            display: none; /* 默认隐藏 */
+            position: fixed;
+            z-index: 9999;
+            left: 0; top: 0; width: 100vw; height: 100vh;
+            background-color: rgba(15, 15, 15, 0.95); /* 深色护眼背景 */
+            backdrop-filter: blur(5px);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .lightbox.active { display: flex; } /* 激活时显示 */
+
+        /* 大图本身 */
+        .lb-img {
+            max-width: 90vw;
+            max-height: 75vh;
+            object-fit: contain;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 4px;
+            transition: opacity 0.2s;
+        }
+
+        /* 顶部工具栏：文件名和关闭按钮 */
+        .lb-topbar {
+            position: absolute; top: 0; left: 0; width: 100%; height: 60px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 30px; box-sizing: border-box;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+            color: #ccc; font-size: 14px;
+        }
+        .lb-close { font-size: 30px; cursor: pointer; color: white; transition: 0.2s; }
+        .lb-close:hover { color: #ff4757; transform: scale(1.1); }
+
+        /* 左右翻页按钮 */
+        .lb-nav {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            color: rgba(255,255,255,0.5); font-size: 60px; cursor: pointer;
+            user-select: none; padding: 20px; transition: 0.2s;
+        }
+        .lb-nav:hover { color: white; transform: translateY(-50%) scale(1.1); }
+        .lb-prev { left: 30px; }
+        .lb-next { right: 30px; }
+
+        /* 底部：胶卷式缩略图导航（绘画辅助神器） */
+        .filmstrip-container {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 120px;
+            background: rgba(0,0,0,0.6);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .filmstrip {
+            display: flex; gap: 10px; padding: 0 20px;
+            overflow-x: auto; scroll-behavior: smooth;
+            max-width: 100%; height: 90px; align-items: center;
+        }
+        /* 隐藏滚动条让界面更干净 */
+        .filmstrip::-webkit-scrollbar { height: 6px; }
+        .filmstrip::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+
+        .filmstrip img {
+            height: 70px; min-width: 70px; object-fit: cover; border-radius: 4px;
+            cursor: pointer; opacity: 0.4; border: 2px solid transparent; transition: 0.2s;
+        }
+        .filmstrip img:hover { opacity: 0.8; }
+        .filmstrip img.active {
+            opacity: 1; border-color: #4facfe; box-shadow: 0 0 10px #4facfe;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+        <h3>📂 我的图库列表</h3>
+        <div class="add-folder-box">
+            <button onclick="browseAndAddFolder()" id="browseBtn">📂 点击选择电脑文件夹并添加</button>
+            <div id="message"></div>
+            <small style="color:#888; font-size:11px;">(点击按钮会呼出操作系统的文件夹选择器)</small>
+        </div>
+        <ul class="folder-list" id="folderList">
+            <div class="empty-state">加载图库配置中...</div>
+        </ul>
+    </div>
+
+    <!-- 主展示区 -->
+    <div class="main-content">
+        <div class="header">
+            <h2 id="currentFolderName">选择一个图库查看</h2>
+            <p id="imageCount">共 0 张图片</p>
+        </div>
+        <div class="gallery" id="gallery">
+            <div class="empty-state">👈 请在左侧选择或添加一个图库</div>
+        </div>
+    </div>
+
+    <!-- ====== 【全新：大图查看器 DOM 结构】 ====== -->
+    <div class="lightbox" id="lightbox">
+        <div class="lb-topbar">
+            <span id="lb-title">图片名称.jpg</span>
+            <span class="lb-close" onclick="closeLightbox()" title="关闭 (Esc)">×</span>
+        </div>
+        
+        <div class="lb-nav lb-prev" onclick="changeImage(-1)" title="上一张 (左方向键)">‹</div>
+        <!-- 核心：展示高清原图 -->
+        <img class="lb-img" id="lb-img" src="" alt="大图加载中...">
+        <div class="lb-nav lb-next" onclick="changeImage(1)" title="下一张 (右方向键)">›</div>
+
+        <div class="filmstrip-container">
+            <div class="filmstrip" id="filmstrip">
+                <!-- 底部缩略图会由 JS 动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let foldersData = [];
+        let currentFolderIndex = -1;
+        
+        // 【新增状态】：为了大图查看器，我们需要记住当前相册的所有图片列表，以及正在看第几张
+        let currentImageList = []; 
+        let currentViewingIndex = 0;
+
+        // 1. 获取配置
+        async function fetchFolders() {
+            try {
+                const res = await fetch('/api/folders');
+                foldersData = await res.json();
+                renderFolderList();
+                if (foldersData.length > 0) selectFolder(0);
+            } catch (error) {
+                showMessage("获取配置失败，后端没开？", true);
+            }
+        }
+
+        // 2. 渲染左侧列表
+        function renderFolderList() {
+            const list = document.getElementById('folderList');
+            if (foldersData.length === 0) {
+                list.innerHTML = '<div class="empty-state" style="font-size: 13px; padding: 20px;">暂无图库</div>';
+                return;
+            }
+            list.innerHTML = '';
+            foldersData.forEach((path, index) => {
+                const li = document.createElement('li');
+                li.className = 'folder-item';
+                if (index === currentFolderIndex) li.classList.add('active');
+                const shortName = path.split('\\').pop() || path.split('/').pop();
+                li.innerHTML = `<strong>${shortName}</strong> <br><small style="color:#999">${path}</small>`;
+                li.onclick = () => selectFolder(index);
+                list.appendChild(li);
+            });
+        }
+
+        // 3. 点击“选择文件夹”
+        async function browseAndAddFolder() {
+            const btn = document.getElementById('browseBtn');
+            btn.disabled = true;
+            btn.innerText = '请在弹出的系统窗口中选择...';
+
+            try {
+                const browseRes = await fetch('/api/choose_folder');
+                const browseResult = await browseRes.json();
+                if (browseResult.error) throw new Error(browseResult.error);
+                const selectedPath = browseResult.path;
+                if (!selectedPath) {
+                    btn.disabled = false; btn.innerText = '📂 点击选择电脑文件夹并添加'; return;
+                }
+
+                const res = await fetch('/api/folders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: selectedPath })
+                });
+                
+                const addResult = await res.json();
+                if (!res.ok) throw new Error(addResult.error);
+                
+                foldersData = addResult;
+                showMessage("图库添加成功！", false);
+                renderFolderList();
+                selectFolder(foldersData.length - 1);
+            } catch (error) { showMessage(error.message, true); } 
+            finally { btn.disabled = false; btn.innerText = '📂 点击选择电脑文件夹并添加'; }
+        }
+
+        // 4. 选中某个图库，加载图片
+        async function selectFolder(index) {
+            currentFolderIndex = index;
+            renderFolderList();
+            
+            const gallery = document.getElementById('gallery');
+            const folderNameLabel = document.getElementById('currentFolderName');
+            const imageCountLabel = document.getElementById('imageCount');
+            
+            const fullPath = foldersData[index];
+            folderNameLabel.textContent = fullPath.split('\\').pop() || fullPath.split('/').pop();
+            gallery.innerHTML = '<div class="empty-state">拼命读取图片中...</div>';
+
+            try {
+                const res = await fetch(`/api/images?folderIndex=${index}`);
+                const images = await res.json();
+                if (images.error) throw new Error(images.error);
+
+                // 保存当前相册的图片列表，供大图查看器使用
+                currentImageList = images;
+                imageCountLabel.textContent = `共 ${images.length} 张图片`;
+                gallery.innerHTML = '';
+
+                if (images.length === 0) {
+                    gallery.innerHTML = '<div class="empty-state">这个文件夹里没有图片哦</div>';
+                    return;
+                }
+
+                // 渲染缩略图网格
+                images.forEach((filename, imgIndex) => {
+                    const card = document.createElement('div');
+                    card.className = 'img-card';
+                    // 点击卡片，打开大图！传入它在数组里的索引
+                    card.onclick = () => openLightbox(imgIndex);
+                    
+                    const img = document.createElement('img');
+                    img.src = `/api/thumbnail?folderIndex=${index}&filename=${encodeURIComponent(filename)}`;
+                    img.loading = 'lazy'; 
+                    img.title = filename;
+
+                    const name = document.createElement('div');
+                    name.className = 'img-name';
+                    name.textContent = filename;
+
+                    card.appendChild(img);
+                    card.appendChild(name);
+                    gallery.appendChild(card);
+                });
+            } catch (error) {
+                gallery.innerHTML = `<div class="empty-state" style="color:red">读取失败: ${error.message}</div>`;
+                imageCountLabel.textContent = '';
+            }
+        }
+
+        // ====== 【全新：大图查看器核心逻辑】 ======
+
+        // 打开大图查看器
+        function openLightbox(index) {
+            currentViewingIndex = index;
+            const filename = currentImageList[index];
+            
+            const lightbox = document.getElementById('lightbox');
+            const lbImg = document.getElementById('lb-img');
+            const lbTitle = document.getElementById('lb-title');
+
+            // 核心：这里请求的是高清原图接口 (/api/image_file)，不是缩略图！
+            lbImg.src = `/api/image_file?folderIndex=${currentFolderIndex}&filename=${encodeURIComponent(filename)}`;
+            lbTitle.textContent = `${index + 1} / ${currentImageList.length} - ${filename}`;
+            
+            lightbox.classList.add('active');
+            
+            // 渲染底部的胶卷缩略图
+            renderFilmstrip();
+        }
+
+        // 关闭大图查看器
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            // 清空 src 释放内存
+            document.getElementById('lb-img').src = ''; 
+        }
+
+        // 翻页逻辑 (dir: -1 代表上一张，1 代表下一张)
+        function changeImage(dir) {
+            currentViewingIndex += dir;
+            // 循环播放：到头了就跳到最后，到最后了就跳到开头
+            if (currentViewingIndex < 0) currentViewingIndex = currentImageList.length - 1;
+            if (currentViewingIndex >= currentImageList.length) currentViewingIndex = 0;
+            
+            openLightbox(currentViewingIndex);
+        }
+
+        // 渲染底部“胶卷式”导航
+        function renderFilmstrip() {
+            const strip = document.getElementById('filmstrip');
+            strip.innerHTML = ''; // 清空旧的
+
+            currentImageList.forEach((filename, idx) => {
+                const img = document.createElement('img');
+                // 底部胶卷只需要小图，节省性能
+                img.src = `/api/thumbnail?folderIndex=${currentFolderIndex}&filename=${encodeURIComponent(filename)}`;
+                img.loading = 'lazy';
+                
+                // 给当前正在看的那张图加个高亮边框
+                if (idx === currentViewingIndex) {
+                    img.classList.add('active');
+                    // 自动让横向滚动条滚动到当前图片的位置，保证它居中可见
+                    setTimeout(() => {
+                        img.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                    }, 50);
+                }
+
+                // 点击底部的小图，直接跳转到那张大图
+                img.onclick = () => openLightbox(idx);
+                strip.appendChild(img);
+            });
+        }
+
+        // 监听键盘按键：画师的最爱！左手放键盘，右手拿画笔
+        document.addEventListener('keydown', (e) => {
+            const lightbox = document.getElementById('lightbox');
+            // 只有当大图查看器打开时，才响应快捷键
+            if (!lightbox.classList.contains('active')) return;
+
+            if (e.key === 'ArrowLeft') {
+                changeImage(-1); // 左方向键：上一张
+            } else if (e.key === 'ArrowRight') {
+                changeImage(1);  // 右方向键：下一张
+            } else if (e.key === 'Escape') {
+                closeLightbox(); // ESC键：退出大图
+            }
+        });
+
+        // 辅助信息提示
+        function showMessage(msg, isError) {
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = msg;
+            msgDiv.style.color = isError ? 'red' : 'green';
+            msgDiv.style.display = 'block';
+            setTimeout(() => { msgDiv.style.display = 'none'; }, 3000);
+        }
+
+        window.onload = fetchFolders;
+    </script>
+</body>
+</html>
