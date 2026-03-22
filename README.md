@@ -27,6 +27,7 @@
 请确保你的电脑上已经安装了 [Node.js](https://nodejs.org/)。
 
 ### 2. 安装与运行
+如果你是开发者：
 ```bash
 # 1. 克隆本项目
 git clone https://github.com/你的用户名/Local-RefImage-Viewer.git
@@ -41,6 +42,12 @@ npm install
 node server.js
 ```
 启动后，浏览器会自动访问 `http://localhost:3000`。
+
+**如果你是画师/普通用户（超简单）：**
+1. 下载并解压本项目，确保你电脑安装了 Node.js。
+2. 双击运行目录下的 **`一键启动.bat`**。
+3. 它会在后台静默启动服务器，**没有任何黑框弹窗打扰你**，并自动为你打开浏览器！
+4. 也就是点一下就能直接开始看图。想关闭时，双击 **`关闭服务器.bat`** 即可。
 
 ### 3. 如何集成到右键菜单？(Windows专属)
 1. 在项目根目录下，双击运行自动生成的 `add_context_menu.reg` 文件。
