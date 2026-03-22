@@ -134,27 +134,64 @@ app.get('/api/image_file', (req, res) => {
     res.sendFile(absoluteImagePath);
 });
 
-// 5. 【黑科技】让 Node.js 后台呼出 Windows 的文件夹选择器！
-app.get('/api/choose_folder', (req, res) => {
-    // 【关键修复2：解决中文路径乱码】强制 PowerShell 使用 UTF-8 编码输出，防止 Node.js 接收到乱码路径
-    const psScript = `[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; Add-Type -AssemblyName System.windows.forms; $f = New-Object System.Windows.Forms.FolderBrowserDialog; $f.Description = '请选择要添加到图库的文件夹'; if($f.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK){ Write-Host $f.SelectedPath -NoNewline }`;
+// 5. 【完全重写】提供内置的文件浏览器 API，彻底告别系统弹窗！
+// 获取所有盘符 (A-Z)
+app.get('/api/drives', (req, res) => {
+    const drives = [];
+    for (let i = 65; i <= 90; i++) {
+        // 关键修复：使用正斜杠来判断，避免由于双反斜杠转义带来的各种潜在问题
+        const drive = String.fromCharCode(i) + ':/';
+        try {
+            if (fs.existsSync(drive)) {
+                // 返回给前端时依然转换回 Windows 习惯的反斜杠
+                drives.push(String.fromCharCode(i) + ':\\');
+            }
+        } catch (e) {
+            // 忽略没有权限或不存在的盘符
+        }
+    }
+    res.json(drives);
+});
 
-    // 【关键修复1】：必须加上 -STA 参数
-    exec(`powershell.exe -STA -Command "${psScript}"`, { encoding: 'utf8' }, (error, stdout, stderr) => {
-        if (error) {
-            console.error('弹窗失败:', error);
-            return res.status(500).json({ error: '无法打开文件夹选择器' });
-        }
+// 获取指定路径下的子文件夹
+app.get('/api/list_dir', (req, res) => {
+    const dirPath = req.query.path;
+    if (!dirPath || !fs.existsSync(dirPath)) {
+        return res.json({ folders: [], hasImages: false });
+    }
+    try {
+        const items = fs.readdirSync(dirPath, { withFileTypes: true });
         
-        // 拿到 PowerShell 返回的选中的路径字符串
-        const selectedPath = stdout.trim();
-        if (selectedPath) {
-            res.json({ path: selectedPath });
-        } else {
-            // 用户点击了取消
-            res.json({ path: null });
-        }
-    });
+        // 过滤出子文件夹
+        const folders = items
+            .filter(item => {
+                try {
+                    return item.isDirectory() && !item.name.startsWith('$') && !item.name.startsWith('.');
+                } catch (e) {
+                    return false;
+                }
+            })
+            .map(item => item.name);
+
+        // 检查当前文件夹里有没有图片（用来给用户提示）
+        const hasImages = items.some(item => {
+            try {
+                if (item.isFile()) {
+                    const ext = path.extname(item.name).toLowerCase();
+                    return ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
+                }
+                return false;
+            } catch (e) {
+                // 忽略没有权限读取的文件（比如系统分页文件 pagefile.sys 等）
+                return false;
+            }
+        });
+
+        res.json({ folders, hasImages });
+    } catch (error) {
+        // 如果没有权限访问
+        res.json({ folders: [], hasImages: false });
+    }
 });
 
 // 4.5 【重磅性能升级：实时生成缩略图】

@@ -139,13 +139,38 @@
             transform: scale(1.05);
         }
 
-        /* ====== 【帮助中心弹窗样式】 ====== */
-        .help-btn {
-            background: none; border: 1px solid #4facfe; color: #4facfe; padding: 8px;
-            border-radius: 4px; cursor: pointer; transition: 0.2s; font-weight: bold;
-            margin-top: 5px; width: 100%;
+        /* ====== 【悬浮菜单样式】 ====== */
+        .floating-menu {
+            position: fixed; left: 20px; bottom: 20px; z-index: 100;
+            display: flex; flex-direction: column-reverse; align-items: center; gap: 10px;
         }
-        .help-btn:hover { background: #4facfe; color: white; }
+        .fab-btn {
+            width: 50px; height: 50px; border-radius: 50%; background: #4facfe; color: white;
+            display: flex; justify-content: center; align-items: center; font-size: 24px;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s; border: none;
+        }
+        .fab-btn:hover { transform: scale(1.1); background: #00f2fe; }
+        .fab-options {
+            display: flex; flex-direction: column-reverse; gap: 10px;
+            opacity: 0; visibility: hidden; transform: translateY(20px); transition: 0.3s;
+        }
+        .fab-options.open { opacity: 1; visibility: visible; transform: translateY(0); }
+        .fab-option {
+            width: 40px; height: 40px; border-radius: 50%; background: white; color: #333;
+            display: flex; justify-content: center; align-items: center; font-size: 18px;
+            cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s; border: none; position: relative;
+        }
+        .fab-option:hover { background: #f0f0f0; transform: scale(1.1); }
+        
+        .fab-option::after {
+            content: attr(data-tooltip); position: absolute; left: 50px;
+            background: rgba(0,0,0,0.7); color: white; padding: 5px 10px;
+            border-radius: 4px; font-size: 12px; white-space: nowrap;
+            opacity: 0; pointer-events: none; transition: 0.2s;
+        }
+        .fab-option:hover::after { opacity: 1; }
+        body.dark-mode .fab-option { background: #333; color: #eee; }
+        body.dark-mode .fab-option:hover { background: #444; }
 
         .help-modal {
             display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100vw; height: 100vh;
@@ -165,6 +190,77 @@
         .help-content h3 { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
         .help-content h4 { color: #4facfe; margin-bottom: 5px; }
         .help-content ul { padding-left: 20px; line-height: 1.6; color: #444; }
+
+        /* ====== 【暗黑模式样式】 ====== */
+        body { transition: background 0.3s, color 0.3s; }
+        .sidebar { transition: background 0.3s, border-color 0.3s; }
+        .folder-item, .img-card, .help-content, .add-folder-box { transition: background 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s; }
+
+        body.dark-mode { background: #1a1a1a; color: #f0f0f0; }
+        body.dark-mode .sidebar { background: #2d2d2d; border-right: 1px solid #444; }
+        body.dark-mode h3, body.dark-mode .header h2 { color: #e0e0e0; }
+        body.dark-mode .header p { color: #aaa; }
+        body.dark-mode .add-folder-box { background: #333; border-color: #555; }
+        body.dark-mode .folder-item { background: #3a3a3a; border-color: #555; color: #ddd; }
+        body.dark-mode .folder-item:hover { background: #4a4a4a; }
+        body.dark-mode .folder-item.active { background: #1a4b77; border-color: #4facfe; color: #fff; }
+        body.dark-mode .img-card { background: #2d2d2d; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        body.dark-mode .img-card:hover { box-shadow: 0 8px 15px rgba(0,0,0,0.5); }
+        body.dark-mode .img-name { color: #ccc; }
+        body.dark-mode .empty-state { color: #888; }
+        body.dark-mode .help-content { background: #2d2d2d; color: #eee; }
+        body.dark-mode .help-content h3 { border-bottom-color: #444; }
+        body.dark-mode .help-content ul { color: #ccc; }
+        body.dark-mode .help-close { color: #aaa; }
+
+        /* ====== 【内置文件夹浏览器样式】 ====== */
+        .fb-modal {
+            display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100vw; height: 100vh;
+            background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;
+        }
+        .fb-modal.active { display: flex; }
+        .fb-content {
+            background: white; width: 80%; max-width: 500px; height: 70vh; border-radius: 10px;
+            display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        body.dark-mode .fb-content { background: #2d2d2d; color: #eee; }
+        .fb-header {
+            padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        body.dark-mode .fb-header { background: #1a1a1a; border-bottom-color: #444; }
+        .fb-header h3 { margin: 0; font-size: 16px; color: #333; }
+        body.dark-mode .fb-header h3 { color: #eee; }
+        .fb-path-bar {
+            padding: 10px 20px; background: #eef2f5; font-family: monospace; font-size: 14px;
+            display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e9ecef;
+        }
+        body.dark-mode .fb-path-bar { background: #333; border-bottom-color: #444; color: #ccc; }
+        .fb-path-bar button { padding: 4px 10px; cursor: pointer; }
+        .fb-path-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .fb-body { flex: 1; overflow-y: auto; padding: 10px; }
+        .fb-item {
+            padding: 10px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid #f0f0f0; transition: 0.2s;
+        }
+        /* 修复网页文件浏览器提示框在暗黑模式下的样式 */
+        body.dark-mode .fb-item { border-bottom-color: #444; }
+        .fb-item:hover { background: #f4f6f9; }
+        body.dark-mode .fb-item:hover { background: #3a3a3a; }
+        .img-tip { padding: 10px; background: #e6f7ff; color: #0056b3; font-size: 13px; text-align: center; border-bottom: 1px solid #b3d7ff; }
+        body.dark-mode .img-tip { background: #1a4b77; color: #4facfe; border-bottom: 1px solid #0056b3; }
+        
+        .fb-footer {
+            padding: 15px 20px; border-top: 1px solid #e9ecef; display: flex; justify-content: flex-end; gap: 10px;
+        }
+        body.dark-mode .fb-footer { border-top-color: #444; }
+        .fb-btn { padding: 8px 15px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; }
+        .fb-btn-cancel { background: #e0e0e0; color: #333; }
+        .fb-btn-cancel:hover { background: #ccc; }
+        .fb-btn-confirm { background: #4facfe; color: white; }
+        .fb-btn-confirm:hover { background: #00f2fe; }
+        body.dark-mode .fb-btn-cancel { background: #555; color: #eee; }
+        body.dark-mode .fb-btn-cancel:hover { background: #666; }
     </style>
 </head>
 <body>
@@ -175,9 +271,7 @@
             <h3>📂 我的图库列表</h3>
         </div>
         <div class="add-folder-box">
-            <button onclick="browseAndAddFolder()" id="browseBtn">📂 点击选择电脑文件夹并添加</button>
-            <button onclick="clearAllFolders()" id="clearBtn" style="background: #ff4757; margin-top: 5px;" title="清空所有已保存的文件夹记录">🗑️ 清空所有记录</button>
-            <button onclick="openHelp()" class="help-btn">❓ 帮助中心 & 功能提示</button>
+            <button onclick="openFolderBrowser()" id="browseBtn">📂 在网页中选择服务器文件夹</button>
             <div id="message"></div>
         </div>
         <ul class="folder-list" id="folderList">
@@ -193,6 +287,16 @@
         </div>
         <div class="gallery" id="gallery">
             <div class="empty-state">👈 请在左侧选择或添加一个图库</div>
+        </div>
+    </div>
+
+    <!-- 悬浮菜单 -->
+    <div class="floating-menu">
+        <button class="fab-btn" onclick="toggleFab()" id="fabMainBtn" title="打开菜单">⚙️</button>
+        <div class="fab-options" id="fabOptions">
+            <button class="fab-option" onclick="clearAllFolders()" data-tooltip="清空记录">🗑️</button>
+            <button class="fab-option" onclick="openHelp()" data-tooltip="帮助中心">❓</button>
+            <button class="fab-option" onclick="toggleTheme()" id="fabThemeBtn" data-tooltip="切换主题">🌙</button>
         </div>
     </div>
 
@@ -249,6 +353,27 @@
         </div>
     </div>
 
+    <!-- 内置文件夹浏览器弹窗 -->
+    <div class="fb-modal" id="fbModal">
+        <div class="fb-content">
+            <div class="fb-header">
+                <h3>选择服务器上的文件夹</h3>
+                <span class="help-close" onclick="closeFolderBrowser()">×</span>
+            </div>
+            <div class="fb-path-bar">
+                <button onclick="fbGoUp()" id="fbUpBtn">⬆️ 上一级</button>
+                <div class="fb-path-text" id="fbCurrentPath" title="电脑根目录">电脑根目录</div>
+            </div>
+            <div class="fb-body" id="fbList">
+                <!-- 文件夹列表 -->
+            </div>
+            <div class="fb-footer">
+                <button class="fb-btn fb-btn-cancel" onclick="closeFolderBrowser()">取消</button>
+                <button class="fb-btn fb-btn-confirm" onclick="fbConfirmSelection()">✅ 选择当前文件夹</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 打开/关闭帮助中心
         function openHelp() { document.getElementById('helpModal').classList.add('active'); }
@@ -301,25 +426,117 @@
             });
         }
 
-        // 3. 点击“选择文件夹”
-        async function browseAndAddFolder() {
-            const btn = document.getElementById('browseBtn');
+        // 3. 点击“选择文件夹”打开内置浏览器
+        let currentBrowserPath = "";
+        
+        function openFolderBrowser() {
+            document.getElementById('fbModal').classList.add('active');
+            currentBrowserPath = ""; // 根目录，显示所有盘符
+            loadBrowserPath();
+        }
+
+        function closeFolderBrowser() {
+            document.getElementById('fbModal').classList.remove('active');
+        }
+
+        async function loadBrowserPath() {
+            const pathText = document.getElementById('fbCurrentPath');
+            const list = document.getElementById('fbList');
+            const upBtn = document.getElementById('fbUpBtn');
+            
+            list.innerHTML = '<div style="padding: 20px; text-align: center; color: #888;">加载中...</div>';
+            
+            if (!currentBrowserPath) {
+                // 显示根目录盘符
+                pathText.textContent = "💻 我的电脑";
+                upBtn.disabled = true;
+                try {
+                    const res = await fetch('/api/drives');
+                    const drives = await res.json();
+                    list.innerHTML = '';
+                    drives.forEach(drive => {
+                        const div = document.createElement('div');
+                        div.className = 'fb-item';
+                        div.innerHTML = `<span>💾</span> <span>${drive}</span>`;
+                        div.onclick = () => { currentBrowserPath = drive; loadBrowserPath(); };
+                        list.appendChild(div);
+                    });
+                } catch (e) { list.innerHTML = '<div style="color:red; padding:20px;">获取盘符失败</div>'; }
+            } else {
+                // 显示具体文件夹内容
+                pathText.textContent = currentBrowserPath;
+                pathText.title = currentBrowserPath;
+                upBtn.disabled = false;
+                try {
+                    const res = await fetch(`/api/list_dir?path=${encodeURIComponent(currentBrowserPath)}`);
+                    const data = await res.json();
+                    list.innerHTML = '';
+                    
+                    // 提示当前文件夹是否有图片
+                    if (data.hasImages) {
+                        const tip = document.createElement('div');
+                        tip.className = 'img-tip';
+                        tip.innerHTML = "🌟 当前文件夹下发现图片！您可以直接点击下方「选择当前文件夹」按钮";
+                        list.appendChild(tip);
+                    }
+
+                    if (data.folders.length === 0) {
+                        const emptyTip = document.createElement('div');
+                        emptyTip.style.cssText = "padding: 20px; text-align: center; color: #888;";
+                        emptyTip.innerHTML = data.hasImages ? "(当前文件夹下没有子文件夹，但包含图片)" : "(此文件夹下没有子文件夹或无权限访问)";
+                        list.appendChild(emptyTip);
+                    }
+                    
+                    data.folders.forEach(folder => {
+                        const div = document.createElement('div');
+                        div.className = 'fb-item';
+                        div.innerHTML = `<span>📁</span> <span>${folder}</span>`;
+                        div.onclick = () => {
+                            // 处理路径拼接（修复 Windows 下 C:\ 和 C:\folder 的拼接问题）
+                            if (currentBrowserPath.endsWith('\\') || currentBrowserPath.endsWith('/')) {
+                                currentBrowserPath += folder;
+                            } else {
+                                currentBrowserPath += '\\' + folder;
+                            }
+                            loadBrowserPath();
+                        };
+                        list.appendChild(div);
+                    });
+                } catch (e) { list.innerHTML = '<div style="color:red; padding:20px;">获取文件夹失败</div>'; }
+            }
+        }
+
+        function fbGoUp() {
+            if (!currentBrowserPath) return;
+            // 简单处理路径向上返回，例如 C:\Users\xxx 返回 C:\Users
+            let parts = currentBrowserPath.split(/[/\\]/).filter(p => p);
+            if (parts.length <= 1) {
+                currentBrowserPath = ""; // 回到我的电脑
+            } else {
+                parts.pop();
+                currentBrowserPath = parts.join('\\');
+                if (parts.length === 1 && !currentBrowserPath.endsWith('\\')) {
+                    currentBrowserPath += '\\'; // 保证 C: 变成 C:\
+                }
+            }
+            loadBrowserPath();
+        }
+
+        async function fbConfirmSelection() {
+            if (!currentBrowserPath) {
+                alert("请先选择一个具体的文件夹（不能直接选择“我的电脑”）");
+                return;
+            }
+            
+            const btn = document.querySelector('.fb-btn-confirm');
             btn.disabled = true;
-            btn.innerText = '请在弹出的系统窗口中选择...';
+            btn.innerText = '添加中...';
 
             try {
-                const browseRes = await fetch('/api/choose_folder');
-                const browseResult = await browseRes.json();
-                if (browseResult.error) throw new Error(browseResult.error);
-                const selectedPath = browseResult.path;
-                if (!selectedPath) {
-                    btn.disabled = false; btn.innerText = '📂 点击选择电脑文件夹并添加'; return;
-                }
-
                 const res = await fetch('/api/folders', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ path: selectedPath })
+                    body: JSON.stringify({ path: currentBrowserPath })
                 });
                 
                 const addResult = await res.json();
@@ -329,8 +546,13 @@
                 showMessage("图库添加成功！", false);
                 renderFolderList();
                 selectFolder(foldersData.length - 1);
-            } catch (error) { showMessage(error.message, true); } 
-            finally { btn.disabled = false; btn.innerText = '📂 点击选择电脑文件夹并添加'; }
+                closeFolderBrowser();
+            } catch (error) { 
+                alert(error.message); 
+            } finally { 
+                btn.disabled = false; 
+                btn.innerText = '✅ 选择当前文件夹'; 
+            }
         }
 
         // 3.5 清空所有图库
@@ -582,7 +804,42 @@
             setTimeout(() => { msgDiv.style.display = 'none'; }, 3000);
         }
 
-        window.onload = fetchFolders;
+        // 黑夜白昼模式切换
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            const fabThemeBtn = document.getElementById('fabThemeBtn');
+            if (isDark) {
+                fabThemeBtn.innerHTML = '🌞';
+                fabThemeBtn.setAttribute('data-tooltip', '切换为白昼模式');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                fabThemeBtn.innerHTML = '🌙';
+                fabThemeBtn.setAttribute('data-tooltip', '切换为黑夜模式');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // 初始化时应用保存的主题
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                const fabThemeBtn = document.getElementById('fabThemeBtn');
+                fabThemeBtn.innerHTML = '🌞';
+                fabThemeBtn.setAttribute('data-tooltip', '切换为白昼模式');
+            }
+        }
+
+        // 悬浮菜单切换
+        function toggleFab() {
+            const fabOptions = document.getElementById('fabOptions');
+            fabOptions.classList.toggle('open');
+        }
+
+        window.onload = () => {
+            initTheme();
+            fetchFolders();
+        };
     </script>
 </body>
 </html>
