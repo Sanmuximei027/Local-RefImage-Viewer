@@ -30,7 +30,7 @@
 如果你是开发者：
 ```bash
 # 1. 克隆本项目
-git clone https://github.com/你的用户名/Local-RefImage-Viewer.git
+git clone https://github.com/sanmuximei027/Local-RefImage-Viewer.git
 
 # 2. 进入目录
 cd Local-RefImage-Viewer
