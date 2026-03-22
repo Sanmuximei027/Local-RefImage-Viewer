@@ -43,7 +43,9 @@ if (args.length > 0) {
 
 // 配置文件路径：用于永久保存你添加的图库路径
 
-// 解析前端发来的 JSON 数据
+// 解析前端发来的 JSON 数据和静态文件
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ====== API 接口 ======
 
