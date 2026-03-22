@@ -138,18 +138,47 @@
             opacity: 1; border-color: #4facfe; box-shadow: 0 0 10px #4facfe;
             transform: scale(1.05);
         }
+
+        /* ====== 【帮助中心弹窗样式】 ====== */
+        .help-btn {
+            background: none; border: 1px solid #4facfe; color: #4facfe; padding: 8px;
+            border-radius: 4px; cursor: pointer; transition: 0.2s; font-weight: bold;
+            margin-top: 5px; width: 100%;
+        }
+        .help-btn:hover { background: #4facfe; color: white; }
+
+        .help-modal {
+            display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100vw; height: 100vh;
+            background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;
+        }
+        .help-modal.active { display: flex; }
+        .help-content {
+            background: white; padding: 30px; border-radius: 10px; width: 80%; max-width: 600px;
+            max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .help-close {
+            position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer;
+            color: #666; transition: 0.2s;
+        }
+        .help-close:hover { color: #ff4757; }
+        .help-content h3 { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
+        .help-content h4 { color: #4facfe; margin-bottom: 5px; }
+        .help-content ul { padding-left: 20px; line-height: 1.6; color: #444; }
     </style>
 </head>
 <body>
 
     <!-- 侧边栏 -->
     <div class="sidebar">
-        <h3>📂 我的图库列表</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>📂 我的图库列表</h3>
+        </div>
         <div class="add-folder-box">
             <button onclick="browseAndAddFolder()" id="browseBtn">📂 点击选择电脑文件夹并添加</button>
             <button onclick="clearAllFolders()" id="clearBtn" style="background: #ff4757; margin-top: 5px;" title="清空所有已保存的文件夹记录">🗑️ 清空所有记录</button>
+            <button onclick="openHelp()" class="help-btn">❓ 帮助中心 & 功能提示</button>
             <div id="message"></div>
-            <small style="color:#888; font-size:11px;">(点击按钮会呼出操作系统的文件夹选择器)</small>
         </div>
         <ul class="folder-list" id="folderList">
             <div class="empty-state">加载图库配置中...</div>
@@ -187,7 +216,44 @@
         </div>
     </div>
 
+    <!-- 帮助中心弹窗 -->
+    <div class="help-modal" id="helpModal">
+        <div class="help-content">
+            <span class="help-close" onclick="closeHelp()">×</span>
+            <h3>📖 帮助中心 & 附属功能</h3>
+            
+            <h4>📌 基础使用方法</h4>
+            <ul>
+                <li>点击左侧 <strong>“点击选择电脑文件夹并添加”</strong> 按钮，选中电脑里的任意文件夹即可将其存为图库。</li>
+                <li>在左侧列表中点击对应的图库，右侧画廊会自动加载该文件夹内的所有图片。</li>
+                <li>点击右侧的缩略图可以进入 <strong>沉浸式大图查看模式</strong>。</li>
+            </ul>
+
+            <h4>🔍 大图查看模式技巧</h4>
+            <ul>
+                <li><strong>缩放：</strong> 鼠标滚轮向上/向下滚动可以缩放图片。</li>
+                <li><strong>移动：</strong> 在图片放大的状态下，按住鼠标左键可以拖拽移动图片位置。</li>
+                <li><strong>翻页：</strong> 点击左右箭头，或者使用键盘的 <strong>左/右方向键</strong> 快速切换上一张/下一张图片。</li>
+                <li><strong>还原：</strong> 双击图片即可快速恢复到默认大小和位置。</li>
+                <li><strong>退出：</strong> 点击右上角关闭按钮，或者按键盘的 <strong>ESC键</strong>。</li>
+                <li><strong>底部胶卷：</strong> 底部的小图列表方便您快速跳转到相册中的任意一张图片，正在查看的图片会高亮显示。</li>
+            </ul>
+
+            <h4>🚀 高级功能与右键菜单（Windows环境）</h4>
+            <ul>
+                <li><strong>右键菜单集成：</strong> 运行项目根目录下的 <code>setup_menu.js</code> 或双击运行 <code>add_context_menu.reg</code>，即可在系统的任意文件夹上右键选择 <strong>"作为本地图库打开"</strong>。这会自动将该文件夹加入本系统并启动查看器！</li>
+                <li><strong>取消右键菜单：</strong> 如果需要移除该功能，只需双击运行 <code>remove_context_menu.reg</code> 即可。</li>
+                <li><strong>一键启动：</strong> 提供了 <code>一键启动(无黑框).vbs</code> 等脚本，方便直接双击快速启动本服务器而无需开启命令行窗口。</li>
+                <li><strong>关闭服务器：</strong> 如果需要停止后台运行的图库服务，运行 <code>关闭服务器.bat</code> 即可彻底关闭。</li>
+            </ul>
+        </div>
+    </div>
+
     <script>
+        // 打开/关闭帮助中心
+        function openHelp() { document.getElementById('helpModal').classList.add('active'); }
+        function closeHelp() { document.getElementById('helpModal').classList.remove('active'); }
+
         let foldersData = [];
         let currentFolderIndex = -1;
         
