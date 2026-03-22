@@ -21,5 +21,5 @@ const regContent = `Windows Registry Editor Version 5.00
 @="\\"${nodeExePath}\\" \\"${projectPath}\\\\server.js\\" \\"%V\\""
 `;
 
-fs.writeFileSync(path.join(__dirname, 'add_context_menu.reg'), regContent);
+fs.writeFileSync(path.join(__dirname, 'add_context_menu.reg'), '\uFEFF' + regContent, 'utf16le');
 console.log('✅ 注册表文件 add_context_menu.reg 已生成！双击运行该文件即可添加到右键菜单。');
