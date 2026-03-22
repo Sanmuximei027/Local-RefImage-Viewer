@@ -72,6 +72,25 @@ app.post('/api/folders', (req, res) => {
     res.json(config.folders);
 });
 
+// 2.5 清空所有文件夹
+app.delete('/api/folders', (req, res) => {
+    const config = getConfig();
+    config.folders = [];
+    saveConfig(config);
+    res.json(config.folders);
+});
+
+// 2.6 删除单个文件夹
+app.delete('/api/folders/:index', (req, res) => {
+    const index = parseInt(req.params.index);
+    const config = getConfig();
+    if (index >= 0 && index < config.folders.length) {
+        config.folders.splice(index, 1);
+        saveConfig(config);
+    }
+    res.json(config.folders);
+});
+
 // 3. 读取某个特定文件夹内的图片列表
 // 前端会传 folderIndex (文件夹在列表中的序号) 过来
 app.get('/api/images', (req, res) => {
