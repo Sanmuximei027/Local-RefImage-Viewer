@@ -6,4 +6,4 @@ currentFolder = fso.GetParentFolderName(WScript.ScriptFullName)
 ws.CurrentDirectory = currentFolder
 
 ' 必须用 cmd /c 包装，以确保环境变量能正确解析 node 命令
-ws.Run "cmd /c node launcher.js", 0, False
+ws.Run "cmd /c node.exe launcher.js", 0, False
