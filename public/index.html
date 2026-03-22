@@ -80,7 +80,17 @@
             object-fit: contain;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             border-radius: 4px;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s, transform 0.1s ease-out;
+            cursor: grab;
+            transform-origin: center center;
+        }
+        .lb-img:active { cursor: grabbing; }
+
+        /* 放大缩小提示 */
+        .zoom-tip {
+            position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.6); color: white; padding: 5px 15px; border-radius: 20px;
+            font-size: 12px; pointer-events: none; opacity: 0.7; z-index: 10000;
         }
 
         /* 顶部工具栏：文件名和关闭按钮 */
@@ -158,6 +168,7 @@
 
     <!-- ====== 【全新：大图查看器 DOM 结构】 ====== -->
     <div class="lightbox" id="lightbox">
+        <div class="zoom-tip">🖱️ 滚轮缩放 / 拖拽移动 / 双击还原</div>
         <div class="lb-topbar">
             <span id="lb-title">图片名称.jpg</span>
             <span class="lb-close" onclick="closeLightbox()" title="关闭 (Esc)">×</span>
@@ -300,10 +311,32 @@
             }
         }
 
-        // ====== 【全新：大图查看器核心逻辑】 ======
+        // ====== 【全新：大图查看器核心逻辑（支持缩放/拖拽）】 ======
+        let currentZoom = 1;
+        let isDragging = false;
+        let startX = 0, startY = 0;
+        let translateX = 0, translateY = 0;
+
+        function resetZoom() {
+            currentZoom = 1;
+            translateX = 0;
+            translateY = 0;
+            updateImageTransform();
+        }
+
+        function updateImageTransform() {
+            const lbImg = document.getElementById('lb-img');
+            // 关闭过渡动画以保证拖拽流畅性，松手时恢复
+            if (isDragging) lbImg.style.transition = 'none';
+            else lbImg.style.transition = 'opacity 0.2s, transform 0.1s ease-out';
+            
+            lbImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+        }
 
         // 打开大图查看器
         function openLightbox(index) {
+            resetZoom(); // 每次打开新图时重置缩放
+            
             currentViewingIndex = index;
             const filename = currentImageList[index];
             
@@ -363,6 +396,48 @@
                 strip.appendChild(img);
             });
         }
+
+        // --- 鼠标滚轮缩放与拖拽功能 ---
+        const lightboxEl = document.getElementById('lightbox');
+        const lbImgEl = document.getElementById('lb-img');
+
+        lightboxEl.addEventListener('wheel', (e) => {
+            if (!lightboxEl.classList.contains('active')) return;
+            // 如果鼠标在底部缩略图区域滚动，则不缩放图片，保留原有横向滚动
+            if (e.target.closest('.filmstrip-container')) return;
+
+            e.preventDefault(); 
+            const zoomStep = 0.15;
+            if (e.deltaY < 0) currentZoom += zoomStep; // 向上滚，放大
+            else currentZoom -= zoomStep; // 向下滚，缩小
+            
+            currentZoom = Math.max(0.1, Math.min(currentZoom, 20)); // 限制缩放比例 0.1x - 20x
+            updateImageTransform();
+        }, { passive: false });
+
+        lbImgEl.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            lbImgEl.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging || !lightboxEl.classList.contains('active')) return;
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            updateImageTransform();
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            lbImgEl.style.cursor = 'grab';
+            updateImageTransform(); // 恢复动画过渡
+        });
+
+        // 双击还原
+        lbImgEl.addEventListener('dblclick', resetZoom);
 
         // 监听键盘按键：画师的最爱！左手放键盘，右手拿画笔
         document.addEventListener('keydown', (e) => {
